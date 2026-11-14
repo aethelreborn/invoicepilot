@@ -1,0 +1,14 @@
+node_modules
+.next
+.open-next
+.wrangler
+.git
+.env*
+PROJECT_NOTES.md
+_assets
+_shots
+tests
+coverage
+*.log
+.dockerignore
+Dockerfile

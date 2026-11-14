@@ -80,10 +80,14 @@ export async function proxy(request: NextRequest) {
 
   let user = null;
   try {
-    const getUserPromise = supabase.auth.getUser();
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
-    const result = await Promise.race([getUserPromise, timeoutPromise]);
-    user = (result as { data?: { user?: unknown } })?.data?.user ?? null;
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      // Supabase auth unreachable or its token rejected: do not kick the
+      // visitor to /login on a transient failure. The (app) layout and every
+      // admin/API route re-check auth server-side, so protection holds.
+      return supabaseResponse;
+    }
+    user = data?.user ?? null;
   } catch {
     // Network/env issue: allow request through; pages handle auth themselves.
     return supabaseResponse;

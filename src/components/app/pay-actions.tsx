@@ -68,6 +68,7 @@ export default function PayActions({
   const [failed, setFailed] = useState(false);
   const [claimStep, setClaimStep] = useState<"idle" | "requesting" | "code" | "verifying">("idle");
   const [otpError, setOtpError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const pollOnce = useCallback(async (): Promise<boolean> => {
     try {
@@ -109,29 +110,35 @@ export default function PayActions({
 
   const startRedirect = async () => {
     setPhase("redirecting");
+    setCheckoutError(null);
     const res = await fetch(`/api/pay/${token}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ provider }),
     });
-    const data = (await res.json()) as CheckoutResponse;
+    const data = (await res.json()) as CheckoutResponse & { error?: string };
     if (res.ok && data.checkout.kind === "redirect" && data.checkout.url) {
       window.location.assign(data.checkout.url);
       return;
     }
+    setCheckoutError(data.error || "Could not start the payment. Check the provider settings.");
     setPhase("idle");
   };
 
   const startRazorpay = async () => {
     setPhase("redirecting");
+    setCheckoutError(null);
     const res = await fetch(`/api/pay/${token}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ provider: "razorpay" }),
     });
-    const data = (await res.json()) as CheckoutResponse;
+    const data = (await res.json()) as CheckoutResponse & { error?: string };
     setPhase("idle");
-    if (!res.ok || data.checkout.kind !== "razorpay") return;
+    if (!res.ok || data.checkout.kind !== "razorpay") {
+      setCheckoutError(data.error || "Could not start the payment. Check the provider settings.");
+      return;
+    }
     const { keyId, orderId, amount, currency, prefillEmail } = data.checkout;
     if (!keyId || !orderId) return;
 
@@ -337,6 +344,12 @@ export default function PayActions({
         >
           {phase === "redirecting" ? "Opening checkout…" : "Complete payment"}
         </button>
+      )}
+
+      {checkoutError && (
+        <p className="mt-3 border border-stamp/40 bg-stamp/[0.06] px-3 py-2 text-[12px] leading-relaxed text-stamp">
+          {checkoutError}
+        </p>
       )}
 
       {(provider === "stripe" || provider === "youpi") && (

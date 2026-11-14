@@ -13,6 +13,39 @@ import {
   PayMockup,
 } from "@/components/marketing/mockups";
 
+const faqItems = [
+  {
+    q: "Do I need to switch invoicing tools?",
+    a: "No. Add invoices by hand, import a CSV, or paste a payment link from the tool you already use. InvoicePilot handles follow-up only.",
+  },
+  {
+    q: "Does it take a cut of the payment?",
+    a: "No. You collect through whatever method you already accept. InvoicePilot charges a flat monthly price and nothing per invoice.",
+  },
+  {
+    q: "Can my client mark an invoice paid?",
+    a: "They can claim it. The invoice moves to claimed and the reminder sequence stops. Only you can mark it paid.",
+  },
+  {
+    q: "What happens after the final notice?",
+    a: "The sequence ends. The invoice stays on the dashboard as overdue until you mark it paid, void it, or start a new sequence.",
+  },
+  {
+    q: "Is there a free plan?",
+    a: "Yes. Three invoices, manual reminders, and the full dashboard, with no card required.",
+  },
+];
+
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function Reveal({
@@ -575,28 +608,11 @@ export default function LandingPage() {
             </Reveal>
 
             <div className="md:col-span-8">
-              {[
-                {
-                  q: "Do I need to switch invoicing tools?",
-                  a: "No. Add invoices by hand, import a CSV, or paste a payment link from the tool you already use. InvoicePilot handles follow-up only.",
-                },
-                {
-                  q: "Does it take a cut of the payment?",
-                  a: "No. You collect through whatever method you already accept. InvoicePilot charges a flat monthly price and nothing per invoice.",
-                },
-                {
-                  q: "Can my client mark an invoice paid?",
-                  a: "They can claim it. The invoice moves to claimed and the reminder sequence stops. Only you can mark it paid.",
-                },
-                {
-                  q: "What happens after the final notice?",
-                  a: "The sequence ends. The invoice stays on the dashboard as overdue until you mark it paid, void it, or start a new sequence.",
-                },
-                {
-                  q: "Is there a free plan?",
-                  a: "Yes. Three invoices, manual reminders, and the full dashboard, with no card required.",
-                },
-              ].map((f) => (
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
+              />
+              {faqItems.map((f) => (
                 <details key={f.q} className="group border-t border-rule last:border-b">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-[14px] font-medium text-ink [&::-webkit-details-marker]:hidden">
                     {f.q}

@@ -55,10 +55,19 @@ export async function createYoupiCheckout({
     }),
   });
 
-  const session = (await response.json().catch(() => ({}))) as YoupiSession;
+  const raw = await response.text().catch(() => "");
+  let session: YoupiSession = {};
+  try {
+    session = JSON.parse(raw) as YoupiSession;
+  } catch {
+    session = {};
+  }
 
   if (!response.ok || !session.checkoutUrl || !session.paymentId) {
-    throw new ProviderError(`YouPI session creation failed (${response.status}).`);
+    const excerpt = raw.replace(/\s+/g, " ").trim().slice(0, 240);
+    throw new ProviderError(
+      `YouPI session creation failed (${response.status})${excerpt ? `: ${excerpt}` : ". Returned no checkout URL."}`
+    );
   }
 
   // The gateway echoes our order id back in its webhook, so that is the value
