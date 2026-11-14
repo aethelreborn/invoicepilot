@@ -1,12 +1,13 @@
 import { ImageResponse } from "next/og";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { INSTRUMENT_SERIF_TTF } from "@/lib/instrument-serif";
 
 export const alt = "InvoicePilot — get paid without the awkward part";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const serif = readFileSync(join(process.cwd(), "src/app/fonts/InstrumentSerif-Regular.ttf"));
+const serifDecoded = Uint8Array.from(atob(INSTRUMENT_SERIF_TTF), (c) => c.charCodeAt(0));
+const serifBytes = new ArrayBuffer(serifDecoded.length);
+new Uint8Array(serifBytes).set(serifDecoded);
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -126,7 +127,7 @@ export default function OpengraphImage() {
     {
       ...size,
       fonts: [
-        { name: "Instrument Serif", data: serif, style: "normal", weight: 400 },
+        { name: "Instrument Serif", data: serifBytes, style: "normal", weight: 400 },
       ],
     }
   );
