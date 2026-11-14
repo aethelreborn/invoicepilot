@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isDemoMode } from "@/lib/demo";
 import { demoStore } from "@/lib/demo-store";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { claimOtpGate, sendClaimOtp, verifyClaimOtp } from "@/lib/claim-otp";
 import type { Invoice } from "@/lib/types";
 
 type PublicLineItem = {
@@ -70,12 +72,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const body = await request.json().catch(() => ({}));
+  const action = body.action === "request-otp" ? "request-otp" : "claim";
   const provider = typeof body.provider === "string" && PROVIDERS.has(body.provider)
     ? body.provider
     : "upi";
   const note = typeof body.note === "string" ? body.note.slice(0, 280) : null;
 
   if (isDemoMode()) {
+    if (action === "request-otp") {
+      return NextResponse.json({ otp_required: false });
+    }
     const invoice = demoStore.invoices.find((i) => i.pay_token === token);
     if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (invoice.status === "claimed" || invoice.status === "paid") {
@@ -88,6 +94,54 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     invoice.viewed_at = invoice.viewed_at || new Date().toISOString();
     invoice.updated_at = new Date().toISOString();
     return NextResponse.json({ ok: true, status: "claimed" });
+  }
+
+  const admin = createAdminSupabase();
+  const { data: invoiceRow, error: invoiceError } = await admin
+    .from("invoices")
+    .select("*")
+    .eq("pay_token", token)
+    .maybeSingle();
+
+  if (invoiceError) {
+    console.error("claim invoice lookup failed", invoiceError.message);
+    return NextResponse.json({ error: "Could not load this invoice." }, { status: 500 });
+  }
+  if (!invoiceRow) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const invoice = invoiceRow as Invoice;
+
+  if (action === "request-otp") {
+    const gate = await claimOtpGate(invoice);
+    if (gate === "direct") {
+      return NextResponse.json({ otp_required: false });
+    }
+    const result = await sendClaimOtp(invoice);
+    if (!result.ok) {
+      console.error("claim otp send failed", result.reason);
+      return NextResponse.json(
+        { error: "Could not send the code. Try again in a moment." },
+        { status: 502 }
+      );
+    }
+    return NextResponse.json({ otp_required: true });
+  }
+
+  const gate = await claimOtpGate(invoice);
+  if (gate === "otp") {
+    const otp = typeof body.otp === "string" ? body.otp.trim() : "";
+    if (!/^\d{6}$/.test(otp)) {
+      return NextResponse.json(
+        { error: "Enter the 6-digit code from the email." },
+        { status: 400 }
+      );
+    }
+    const verified = await verifyClaimOtp(invoice, otp);
+    if (!verified) {
+      return NextResponse.json(
+        { error: "That code did not match, or it has expired. Request a fresh one." },
+        { status: 400 }
+      );
+    }
   }
 
   const supabase = await createServerSupabase();

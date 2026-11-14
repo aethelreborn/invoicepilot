@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { buildUpiUri } from "@/lib/payments";
+import OneTimeCode from "@/components/originkit/ui/one-time-code";
+import QRCodeAssemble from "@/components/originkit/ui/qr-code-assemble";
 
 export type PublicPaymentInfo = {
   provider: string;
@@ -51,17 +53,21 @@ export default function PayActions({
   payment,
   amountCents,
   currency,
+  clientEmailMasked,
 }: {
   token: string;
   status: string;
   payment: PublicPaymentInfo | null;
   amountCents: number;
   currency: string;
+  clientEmailMasked?: string | null;
 }) {
   const [phase, setPhase] = useState<"idle" | "redirecting" | "polling">("idle");
   const [claimed, setClaimed] = useState(status === "claimed");
   const [paid, setPaid] = useState(status === "paid");
   const [failed, setFailed] = useState(false);
+  const [claimStep, setClaimStep] = useState<"idle" | "requesting" | "code" | "verifying">("idle");
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   const pollOnce = useCallback(async (): Promise<boolean> => {
     try {
@@ -156,16 +162,72 @@ export default function PayActions({
     }).open();
   };
 
-  const claim = async (note?: string) => {
-    setPhase("polling");
+  const directClaim = async () => {
     const res = await fetch(`/api/pay/${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider: payment?.provider || "upi", note }),
+      body: JSON.stringify({ provider: payment?.provider || "upi", action: "claim" }),
     });
     if (res.ok) {
       setClaimed(true);
-      setPhase("polling");
+      return true;
+    }
+    return false;
+  };
+
+  const startClaim = async () => {
+    setClaimStep("requesting");
+    setOtpError(null);
+    try {
+      const res = await fetch(`/api/pay/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "request-otp", provider: payment?.provider || "upi" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { otp_required?: boolean; error?: string };
+
+      if (res.ok && data.otp_required === false) {
+        setClaimStep("idle");
+        await directClaim();
+        return;
+      }
+
+      if (res.ok && data.otp_required === true) {
+        setClaimStep("code");
+        return;
+      }
+
+      // Older deployments do not know action=request-otp: fall back to the direct claim.
+      setClaimStep("idle");
+      await directClaim();
+    } catch {
+      setClaimStep("idle");
+    }
+  };
+
+  const confirmOtp = async (code: string) => {
+    setClaimStep("verifying");
+    setOtpError(null);
+    try {
+      const res = await fetch(`/api/pay/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: payment?.provider || "upi", action: "claim", otp: code }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (res.ok) {
+        setClaimed(true);
+        setClaimStep("idle");
+        setPhase("idle");
+        return;
+      }
+
+      setOtpError(data.error || "That code did not match. Try again.");
+      setClaimStep("code");
+    } catch {
+      setOtpError("Something went wrong. Check your connection and try again.");
+      setClaimStep("code");
     }
   };
 
@@ -214,14 +276,25 @@ export default function PayActions({
         <div className="border border-rule bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-[180px] text-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/pay/${token}/qr.png`}
-                alt={`UPI QR for invoice payment of ${amountCents} paise`}
-                width={180}
-                height={180}
-                className="mx-auto block border border-rule bg-paper"
-              />
+              {qrUri ? (
+                <div className="mx-auto block border border-rule bg-paper" style={{ width: 180, height: 180 }}>
+                  <QRCodeAssemble
+                    text={qrUri}
+                    theme="light"
+                    background="#fbfaf6"
+                    color="#16150f"
+                    variant="fan"
+                    size={170}
+                    loop
+                    showButton={false}
+                    style={{ minWidth: 0, minHeight: 0, width: "100%", height: "100%" }}
+                  />
+                </div>
+              ) : (
+                <p className="mx-auto flex h-[180px] w-[180px] items-center justify-center border border-rule text-center text-[10px] text-muted">
+                  UPI is INR only
+                </p>
+              )}
               <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.14em] text-muted">Scan with any UPI app</p>
             </div>
             <div className="min-w-[180px] flex-1">
@@ -279,7 +352,7 @@ export default function PayActions({
       {provider === "custom" && (
         <div className="border border-dashed border-ink/30 bg-card px-4 py-3">
           <p className="text-[12px] leading-relaxed text-ink-soft">Send the payment to your bank and notify your client to claim it.</p>
-          <button onClick={() => claim()} className="mt-3 flex h-10 w-full items-center justify-center bg-ink px-5 text-[12px] font-medium text-paper transition-colors hover:bg-ink-soft">
+          <button onClick={startClaim} className="mt-3 flex h-10 w-full items-center justify-center bg-ink px-5 text-[12px] font-medium text-paper transition-colors hover:bg-ink-soft">
             I have paid this invoice
           </button>
         </div>
@@ -287,12 +360,55 @@ export default function PayActions({
 
       {(provider === "upi" || provider === "custom") && (
         <button
-          onClick={() => claim()}
-          disabled={phase === "redirecting"}
+          onClick={startClaim}
+          disabled={claimStep === "requesting" || phase === "redirecting"}
           className="mt-3 flex h-10 w-full items-center justify-center border border-ink bg-card px-5 text-[12px] font-medium text-ink transition-colors hover:bg-ink hover:text-paper disabled:opacity-50"
         >
-          {phase === "redirecting" ? "Notifying…" : "I have paid this invoice"}
+          {claimStep === "requesting" ? "Notifying…" : "I have paid this invoice"}
         </button>
+      )}
+
+      {claimStep === "code" && (
+        <div className="mt-4 border border-rule bg-card px-5 py-5">
+          <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-muted">One more step</p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
+            Enter the 6-digit code we emailed to{" "}
+            <span className="text-ink">{clientEmailMasked || "you"}</span> to confirm this payment.
+          </p>
+          <div className="mt-4 flex justify-center">
+            <OneTimeCode
+              length={6}
+              answer="accept"
+              code=""
+              background="#fbfaf6"
+              corner={10}
+              gap={8}
+              cellWidth={44}
+              cellHeight={48}
+              scale={100}
+              theme="light"
+              interaction={{ autoFocus: true }}
+              onComplete={(completedCode) => confirmOtp(completedCode)}
+            />
+          </div>
+          {otpError && (
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-stamp">{otpError}</p>
+          )}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <button
+              onClick={startClaim}
+              className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted underline underline-offset-2 hover:text-ink"
+            >
+              Resend code
+            </button>
+            <button
+              onClick={() => setClaimStep("idle")}
+              className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted underline underline-offset-2 hover:text-ink"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       <p className="mt-2.5 text-center font-mono text-[9px] uppercase leading-relaxed tracking-[0.1em] text-muted">

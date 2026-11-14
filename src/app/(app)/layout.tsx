@@ -5,6 +5,7 @@ import { isDemoMode } from "@/lib/demo";
 import { demoStore } from "@/lib/demo-store";
 import { createServerSupabase } from "@/lib/supabase/server";
 import AppNav from "@/components/app/app-nav";
+import AppDock from "@/components/app/app-dock";
 import { Mark } from "@/components/marketing/wordmark";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -71,7 +72,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </button>
             </form>
           </div>
-          <AppNav variant="bar" />
         </div>
 
         {isDemoMode() && (
@@ -81,7 +81,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
+        <AppDock />
       </div>
     </div>
   );

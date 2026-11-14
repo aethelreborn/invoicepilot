@@ -12,7 +12,7 @@ const nav = [
   { href: "/settings", label: "Settings" },
 ];
 
-export default function AppNav({ variant = "rail" }: { variant?: "rail" | "bar" }) {
+export default function AppNav() {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -21,26 +21,6 @@ export default function AppNav({ variant = "rail" }: { variant?: "rail" | "bar" 
     }
     return pathname === href;
   };
-
-  if (variant === "bar") {
-    return (
-      <nav className="flex gap-5 overflow-x-auto border-b border-rule px-4 py-2">
-        {nav.map((n) => (
-          <Link
-            key={n.href}
-            href={n.href}
-            className={`shrink-0 border-b-2 py-1 text-[12px] transition-colors ${
-              isActive(n.href)
-                ? "border-ink text-ink"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {n.label}
-          </Link>
-        ))}
-      </nav>
-    );
-  }
 
   return (
     <nav className="flex-1 px-4 py-5">

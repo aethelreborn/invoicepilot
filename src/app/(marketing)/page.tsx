@@ -4,6 +4,8 @@ import Link from "next/link";
 import { MotionConfig, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import HeroStack from "@/components/marketing/hero-stack";
+import FormulaStream from "@/components/originkit/ui/formula-stream";
+import ShapeMosaic from "@/components/originkit/ui/shape-mosaic";
 import {
   AgingTable,
   DashboardMockup,
@@ -184,6 +186,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <FormulaStream />
 
         {/* ── The sequence ─────────────────────────────────────── */}
         <section id="sequence" className="scroll-mt-[62px] bg-ink text-paper">
@@ -610,8 +614,16 @@ export default function LandingPage() {
         </section>
 
         {/* ── Close ────────────────────────────────────────────── */}
-        <section className="bg-ink text-paper">
-          <div className="mx-auto w-full max-w-[1200px] px-6 py-20 md:px-10 md:py-24">
+        <section className="relative overflow-hidden bg-ink text-paper">
+          <ShapeMosaic
+            style={{ position: "absolute", inset: 0, minWidth: 0, minHeight: 0 }}
+            ink="#7d7970"
+            lit="#d3cdbe"
+            cell={34}
+            reach={22}
+            turn={28}
+          />
+          <div className="relative mx-auto w-full max-w-[1200px] px-6 py-20 md:px-10 md:py-24">
             <div className="grid gap-8 md:grid-cols-12 md:items-end">
               <Reveal className="md:col-span-8">
                 <h2 className="max-w-[22ch] font-display text-[clamp(2.2rem,5vw,3.9rem)] leading-[0.98] tracking-[-0.015em]">

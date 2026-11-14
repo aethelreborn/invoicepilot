@@ -55,6 +55,8 @@ export interface Invoice {
   last_reminder_at: string | null;
   paid_at: string | null;
   viewed_at: string | null;
+  claim_otp_hash?: string | null;
+  claim_otp_expires_at?: string | null;
   created_at: string;
   updated_at: string;
   line_items?: InvoiceLineItem[];

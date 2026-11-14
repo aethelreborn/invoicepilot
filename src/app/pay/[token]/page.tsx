@@ -56,6 +56,13 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
   const inv = invoice;
   const items = inv.invoice_line_items || [];
   const payment: PublicPaymentInfo | null = payload?.payment || null;
+  const maskEmail = (value: string | null) => {
+    if (!value) return null;
+    const [local, domain] = value.split("@");
+    if (!domain) return "you";
+    return `${local.slice(0, 1)}***@${domain}`;
+  };
+  const clientEmailMasked = maskEmail(inv.client_email);
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-paper px-4 py-10 text-ink md:items-center md:py-16">
@@ -178,6 +185,7 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
               payment={payment}
               amountCents={inv.total_cents}
               currency={inv.currency}
+              clientEmailMasked={clientEmailMasked}
             />
           </div>
         </article>

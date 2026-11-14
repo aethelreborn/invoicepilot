@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GooeyDeleteConfirm from "@/components/originkit/ui/gooey-delete-confirm";
 
 export default function NotFound() {
   return (
@@ -16,7 +17,7 @@ export default function NotFound() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[1180px] flex-1 items-center py-16">
-        <div className="grid w-full gap-10 border-t border-rule pt-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-16">
+        <div className="grid w-full gap-10 border-t border-rule pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start lg:gap-16">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">
               Error 404
@@ -43,26 +44,22 @@ export default function NotFound() {
             </div>
           </div>
 
-          <dl className="border border-rule bg-card">
-            <div className="flex items-baseline justify-between border-b border-rule px-4 py-3">
-              <dt className="font-mono text-[8px] uppercase tracking-[0.16em] text-muted">
-                Status
-              </dt>
-              <dd className="font-mono text-[11px] tabular-nums text-ink">404</dd>
+          <div className="flex flex-col items-center gap-3 border border-rule bg-card p-6">
+            <div className="w-full" style={{ height: 240 }}>
+              <GooeyDeleteConfirm
+                theme="light"
+                background="#fbfaf6"
+                accent="#a33c26"
+                confirmText="Gone"
+                cancelText="Not yet"
+                size={100}
+                style={{ minWidth: 0, minHeight: 0 }}
+              />
             </div>
-            <div className="flex items-baseline justify-between border-b border-rule px-4 py-3">
-              <dt className="font-mono text-[8px] uppercase tracking-[0.16em] text-muted">
-                Reason
-              </dt>
-              <dd className="text-[12px] text-ink-soft">No matching route</dd>
-            </div>
-            <div className="flex items-baseline justify-between px-4 py-3">
-              <dt className="font-mono text-[8px] uppercase tracking-[0.16em] text-muted">
-                Next step
-              </dt>
-              <dd className="text-[12px] text-ink-soft">Pick a link</dd>
-            </div>
-          </dl>
+            <p className="font-mono text-[9px] uppercase leading-relaxed tracking-[0.14em] text-muted">
+              A bit of theatre. Nothing is deleted.
+            </p>
+          </div>
         </div>
       </main>
 

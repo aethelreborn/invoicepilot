@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PixelSwarmDropdown from "@/components/originkit/ui/pixel-swarm-dropdown";
 
 export const metadata = {
   title: "Features",
@@ -129,6 +130,43 @@ export default function FeaturesPage() {
           </div>
         </section>
       ))}
+
+      <section className="border-b border-rule py-14 md:py-16">
+        <div className="grid gap-8 md:grid-cols-12 md:gap-10">
+          <div className="md:col-span-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+              Tone, tuned
+            </p>
+            <h2 className="mt-4 max-w-[16ch] font-display text-[clamp(1.7rem,2.8vw,2.4rem)] leading-[1.02] tracking-[-0.015em]">
+              Three ways to ask. One setting.
+            </h2>
+            <p className="mt-4 max-w-[40ch] text-[13px] leading-relaxed text-muted">
+              Friendly when they are just late, firm when the silence has texture, final when you
+              need a decision and not an apology. Set it once per client.
+            </p>
+          </div>
+          <div className="md:col-span-7 md:col-start-6">
+            <PixelSwarmDropdown
+              options={[
+                { label: "Friendly", color: "#4a5b40" },
+                { label: "Firm", color: "#a33c26" },
+                { label: "Final", color: "#16150f" },
+              ]}
+              label="Tone"
+              background="#f3f0e8"
+              size={430}
+              font={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontStyle: "italic",
+                fontSize: 28,
+                fontWeight: 400,
+                lineHeight: "1.2em",
+                letterSpacing: "0em",
+              }}
+            />
+          </div>
+        </div>
+      </section>
 
       <section className="py-16 md:py-20">
         <div className="grid gap-8 md:grid-cols-12">
