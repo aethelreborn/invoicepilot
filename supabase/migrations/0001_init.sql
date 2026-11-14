@@ -69,7 +69,7 @@ create table if not exists public.invoices (
   tax_cents bigint not null default 0,
   total_cents bigint not null default 0,
   notes text,
-  pay_token text not null unique default encode(gen_random_bytes(16), 'hex'),
+  pay_token text not null unique default gen_random_uuid()::text,
   reminder_count int not null default 0,
   last_reminder_at timestamptz,
   paid_at timestamptz,
