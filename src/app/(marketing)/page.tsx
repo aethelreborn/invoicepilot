@@ -482,8 +482,8 @@ export default function LandingPage() {
                 </Link>
               </div>
               <p className="mt-5 max-w-[54ch] text-[14px] leading-relaxed text-muted">
-                Free covers three invoices. Starter is ₹799 a month for unlimited
-                invoices and automated sending.
+                Free covers three invoices. Starter is ₹799 a month, Growth ₹1,999 — unlimited
+                invoices, automated sending, hosted checkout. Annual billing takes two months off.
               </p>
             </Reveal>
 
@@ -569,7 +569,7 @@ export default function LandingPage() {
             </div>
 
             <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-              Prices in INR - cancel any time - no transaction fees on either plan
+              Prices in INR - cancel any time - no transaction fees on any plan
             </p>
           </div>
         </section>

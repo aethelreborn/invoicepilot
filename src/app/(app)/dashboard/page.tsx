@@ -6,6 +6,7 @@ import { demoStore } from "@/lib/demo-store";
 import type { Invoice } from "@/lib/types";
 import StatusBadge from "@/components/app/status-badge";
 import { Th } from "@/components/app/table-head";
+import OnboardingCard from "@/components/app/onboarding-card";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,8 @@ export default async function DashboardPage() {
           New invoice
         </Link>
       </div>
+
+      <OnboardingCard />
 
       <div className="mt-8 grid grid-cols-2 gap-px border border-rule bg-rule md:grid-cols-4">
         <Stat

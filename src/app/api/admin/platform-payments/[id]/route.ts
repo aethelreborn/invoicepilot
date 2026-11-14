@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 import { rateLimit } from "@/lib/rate-limit";
+import { renewalDaysFor } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +35,9 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
   if (approved) {
-    const nextPlan = "starter";
-    const renewsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const nextPlan = payment.plan === "growth" ? "growth" : "starter";
+    const interval = payment.interval === "annual" ? "annual" : "monthly";
+    const renewsAt = new Date(Date.now() + renewalDaysFor(interval) * 24 * 60 * 60 * 1000).toISOString();
     const { error: profileError } = await admin
       .from("profiles")
       .update({ plan: nextPlan, plan_renews_at: renewsAt })

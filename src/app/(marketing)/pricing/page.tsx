@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Pricing",
   description:
-    "Free for three invoices. Seven hundred and ninety-nine rupees a month for unlimited invoices and automated follow-up. No transaction fees.",
+    "Free for three invoices. Starter at seven hundred ninety-nine rupees a month or Growth at one thousand nine hundred ninety-nine — unlimited invoices, automated follow-up, hosted checkout. No transaction fees. Annual billing brings two months free.",
 };
 
 const plans = [
@@ -11,13 +11,14 @@ const plans = [
     name: "Free",
     price: "₹0",
     period: "forever",
-    line: "For trying the product on a small book.",
+    line: "For the first invoices, chased by hand.",
     features: [
       "3 invoices",
       "Manual reminders",
       "Public pay pages",
       "AR aging dashboard",
       "Client records",
+      "CSV import and export",
     ],
     cta: "Start free",
     dark: false,
@@ -30,26 +31,43 @@ const plans = [
     features: [
       "Unlimited invoices",
       "Automated reminder sequence",
-      "CSV import and export",
-      "Client records",
-      "Email support",
+      "Custom reminder templates",
+      "Hosted checkout (Razorpay, Stripe, YouPI)",
+      "Annual billing at two months free",
     ],
     cta: "Start free",
     dark: true,
   },
+  {
+    name: "Growth",
+    price: "₹1,999",
+    period: "per month",
+    line: "For the whole receivables desk, on your brand.",
+    features: [
+      "Everything in Starter",
+      "White-label pay pages — your clients never see InvoicePilot",
+      "Founder-led setup on your first invoice run",
+      "Annual billing at two months free",
+    ],
+    cta: "Start free",
+    dark: false,
+  },
 ];
 
-const rows: { label: string; free: string; starter: string }[] = [
-  { label: "Invoices", free: "3", starter: "Unlimited" },
-  { label: "Reminders", free: "Manual", starter: "Automated sequence" },
-  { label: "Public pay pages", free: "Included", starter: "Included" },
-  { label: "Client payment claims", free: "Included", starter: "Included" },
-  { label: "AR aging dashboard", free: "Included", starter: "Included" },
-  { label: "Client records", free: "Included", starter: "Included" },
-  { label: "CSV import", free: "Included", starter: "Included" },
-  { label: "CSV export", free: "Included", starter: "Included" },
-  { label: "Email support", free: "—", starter: "Included" },
-  { label: "Transaction fees", free: "0%", starter: "0%" },
+const rows: { label: string; free: string; starter: string; growth: string }[] = [
+  { label: "Invoices", free: "3", starter: "Unlimited", growth: "Unlimited" },
+  { label: "Reminders", free: "Manual", starter: "Automated sequence", growth: "Automated + custom templates" },
+  { label: "Hosted checkout (Razorpay, Stripe, YouPI)", free: "—", starter: "Included", growth: "Included" },
+  { label: "Public pay pages", free: "Included", starter: "Included", growth: "Included" },
+  { label: "Brand on pay page", free: "InvoicePilot", starter: "InvoicePilot", growth: "Yours only" },
+  { label: "Custom reminder templates", free: "—", starter: "Included", growth: "Included" },
+  { label: "Client payment claims + OTP", free: "Included", starter: "Included", growth: "Included" },
+  { label: "AR aging dashboard", free: "Included", starter: "Included", growth: "Included" },
+  { label: "Client records", free: "Included", starter: "Included", growth: "Included" },
+  { label: "CSV import & export", free: "Included", starter: "Included", growth: "Included" },
+  { label: "Annual billing", free: "—", starter: "2 months free", growth: "2 months free" },
+  { label: "Email support", free: "—", starter: "Included", growth: "Included" },
+  { label: "Transaction fees", free: "0%", starter: "0%", growth: "0%" },
 ];
 
 export default function PricingPage() {
@@ -61,7 +79,7 @@ export default function PricingPage() {
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">Pricing</p>
         </div>
         <h1 className="mt-6 max-w-[20ch] font-display text-[clamp(2.5rem,5.6vw,4.4rem)] leading-[0.95] tracking-[-0.02em]">
-          Two plans. One flat price.
+          Three plans. One flat price.
         </h1>
         <p className="mt-6 max-w-[52ch] text-[15px] leading-[1.7] text-muted">
           You keep every cent you collect. InvoicePilot charges for the software and takes
@@ -69,7 +87,7 @@ export default function PricingPage() {
         </p>
       </header>
 
-      <section className="grid gap-5 py-14 md:grid-cols-2 md:py-16">
+      <section className="grid gap-5 py-14 sm:grid-cols-2 lg:grid-cols-3 md:py-16">
         {plans.map((p) => (
           <div
             key={p.name}
@@ -131,8 +149,7 @@ export default function PricingPage() {
       </section>
 
       <p className="border-t border-rule py-4 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-        Starter checkout opens later. Signing up now puts you on the Free plan, and nothing is
-        charged until you choose to upgrade.
+        Annual billing: ₹7,990 Starter · ₹19,990 Growth — two months free. No transaction fees on any plan.
       </p>
 
       <section className="border-t border-rule py-14 md:py-16">
@@ -141,7 +158,7 @@ export default function PricingPage() {
         </h2>
 
         <div className="mt-8 hidden border border-rule md:block">
-          <div className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-rule bg-paper-deep">
+          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] border-b border-rule bg-paper-deep">
             <span className="px-5 py-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
               Included
             </span>
@@ -151,37 +168,47 @@ export default function PricingPage() {
             <span className="border-l border-rule px-5 py-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
               Starter
             </span>
+            <span className="border-l border-rule px-5 py-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+              Growth
+            </span>
           </div>
           {rows.map((r) => (
             <div
               key={r.label}
-              className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-rule text-[12px] last:border-b-0 even:bg-card"
+              className="grid grid-cols-[1.5fr_1fr_1fr_1fr] border-b border-rule text-[12px] last:border-b-0 even:bg-card"
             >
               <span className="px-5 py-3 text-ink-soft">{r.label}</span>
               <span className="border-l border-rule px-5 py-3 text-muted">{r.free}</span>
               <span className="border-l border-rule px-5 py-3 text-ink">{r.starter}</span>
+              <span className="border-l border-rule px-5 py-3 text-ink">{r.growth}</span>
             </div>
           ))}
         </div>
 
         <div className="mt-8 border border-rule md:hidden">
-          <div className="grid grid-cols-2 border-b border-rule bg-paper-deep">
-            <span className="px-4 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+          <div className="grid grid-cols-3 border-b border-rule bg-paper-deep">
+            <span className="px-3 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
               Free
             </span>
-            <span className="border-l border-rule px-4 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+            <span className="border-l border-rule px-3 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
               Starter
+            </span>
+            <span className="border-l border-rule px-3 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+              Growth
             </span>
           </div>
           {rows.map((r) => (
             <div key={r.label} className="border-b border-rule last:border-b-0">
-              <p className="bg-paper-deep px-4 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
+              <p className="bg-paper-deep px-4 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
                 {r.label}
               </p>
-              <div className="grid grid-cols-2">
-                <div className="px-4 py-2.5 text-[12px] text-ink-soft">{r.free}</div>
-                <div className="border-l border-rule px-4 py-2.5 text-[12px] text-ink">
+              <div className="grid grid-cols-3">
+                <div className="px-3 py-2.5 text-[11px] text-ink-soft">{r.free}</div>
+                <div className="border-l border-rule px-3 py-2.5 text-[11px] text-ink">
                   {r.starter}
+                </div>
+                <div className="border-l border-rule px-3 py-2.5 text-[11px] text-ink">
+                  {r.growth}
                 </div>
               </div>
             </div>
@@ -198,7 +225,7 @@ export default function PricingPage() {
             {[
               {
                 q: "Is there a contract?",
-                a: "No. Starter is month to month, and you can cancel at any time.",
+                a: "No. Starter and Growth are month to month. You can cancel at any time — paid plans lapse back to Free when they renew.",
               },
               {
                 q: "Do you take a percentage?",
@@ -206,7 +233,7 @@ export default function PricingPage() {
               },
               {
                 q: "Can I change plans later?",
-                a: "Yes. Start on Free and move to Starter when three invoices is no longer enough.",
+                a: "Yes. Start on Free, and move to Starter or Growth when three invoices is no longer enough. Upgrades take effect once the platform verifies your UTR.",
               },
             ].map((f) => (
               <details key={f.q} className="group border-t border-rule last:border-b">

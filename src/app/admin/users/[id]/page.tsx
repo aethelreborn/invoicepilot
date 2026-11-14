@@ -3,6 +3,7 @@ import { isDemoMode } from "@/lib/demo";
 import { demoStore } from "@/lib/demo-store";
 import { formatMoney } from "@/lib/currency";
 import AdminNav from "@/components/admin/admin-nav";
+import AdminUserActions from "@/components/admin/admin-user-actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -150,11 +151,16 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
       <section className="mt-6 border border-rule bg-card">
         <h2 className="border-b border-rule px-5 py-3 font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Platform subscription</h2>
         <div className="p-5 md:p-6">
-          <p className="text-[12px] text-ink-soft">Plan: <span className="text-ink">{user.plan}</span></p>
-          <p className="mt-2 text-[12px] text-ink-soft">Started: <span className="text-ink">{user.plan_renews_at ? new Date(user.plan_renews_at).toLocaleDateString("en-IN") : "—"}</span></p>
+          <div className="grid gap-2 text-[12px] text-ink-soft md:grid-cols-2">
+            <p>Plan: <span className="text-ink">{user.plan}</span></p>
+            <p>Renews: <span className="text-ink">{user.plan_renews_at ? new Date(user.plan_renews_at).toLocaleDateString("en-IN") : "—"}</span></p>
+          </div>
           {latestPlatformPayment && (
             <p className="mt-2 text-[12px] text-ink-soft">Reference: <span className="text-ink">{latestPlatformPayment.reference}</span></p>
           )}
+          <div className="mt-6 border-t border-rule pt-5">
+            <AdminUserActions userId={user.id} targetEmail={user.email} currentPlan={user.plan} />
+          </div>
         </div>
       </section>
     </div>

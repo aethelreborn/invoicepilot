@@ -5,6 +5,7 @@ import PayActions, { type PublicPaymentInfo } from "@/components/app/pay-actions
 import StatusBadge from "@/components/app/status-badge";
 import { isDemoMode } from "@/lib/demo";
 import { demoStore } from "@/lib/demo-store";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { Invoice } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,19 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
   }
   if (!invoice) notFound();
   const inv = invoice;
+
+  let whiteLabel = false;
+  if (isDemoMode()) {
+    whiteLabel = (demoStore.profile as { plan?: string }).plan === "growth";
+  } else if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const admin = createAdminSupabase();
+    const { data: owner } = await admin.from("invoices").select("user_id").eq("pay_token", token).maybeSingle();
+    if (owner?.user_id) {
+      const { data: ownerProfile } = await admin.from("profiles").select("plan").eq("id", owner.user_id).maybeSingle();
+      whiteLabel = ownerProfile?.plan === "growth";
+    }
+  }
+
   const items = inv.invoice_line_items || [];
   const payment: PublicPaymentInfo | null = payload?.payment || null;
   const maskEmail = (value: string | null) => {
@@ -190,9 +204,11 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
           </div>
         </article>
 
-        <p className="mt-4 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-          Sent with InvoicePilot
-        </p>
+        {!whiteLabel && (
+          <p className="mt-4 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
+            Sent with InvoicePilot
+          </p>
+        )}
       </div>
     </div>
   );

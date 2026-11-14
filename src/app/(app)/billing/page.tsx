@@ -82,20 +82,26 @@ export default async function BillingPage() {
       <section className="mt-8 border border-rule bg-card p-5 md:p-6">
         <h2 className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Current plan</h2>
         <p className="mt-3 text-[13px] text-ink-soft">
-          Plan: <span className="text-ink">{plan}</span>
+          Plan: <span className="text-ink">{plan === "growth" ? "Growth" : plan === "starter" ? "Starter" : "Free"}</span>
         </p>
-        <p className="mt-1 text-[13px] text-ink-soft">
-          Invoices on Free: <span className="text-ink">{usedCount.count || 0}</span> of 3
-        </p>
+        {plan === "free" ? (
+          <p className="mt-1 text-[13px] text-ink-soft">
+            Invoices on Free: <span className="text-ink">{usedCount.count || 0}</span> of 3
+          </p>
+        ) : (
+          <p className="mt-1 text-[13px] text-ink-soft">
+            Renews: <span className="text-ink">{profile?.plan_renews_at ? new Date(profile.plan_renews_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}</span>
+          </p>
+        )}
       </section>
 
       <section className="mt-6 border border-rule bg-card p-5 md:p-6">
         <h2 className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">Upgrade</h2>
         <p className="mt-3 text-[13px] text-ink-soft">
-          Starter — unlimited invoices, automated reminders, multiple payment providers. Collected via UPI to the platform account.
+          Starter ₹799/month · Growth ₹1,999/month — unlimited invoices, automated follow-ups, hosted checkout, INR. Two months free on annual billing. Collected via UPI to the platform account.
         </p>
         <p className="mt-2 font-mono text-[11px] text-ink-soft">
-          {formatMoney(79900, "INR")} / month · UPI ID {platformUpiId() || "not configured"}
+          {formatMoney(79900, "INR")} / month starter · {formatMoney(199900, "INR")} / month growth · UPI ID {platformUpiId() || "not configured"}
         </p>
         <BillingClient />
       </section>

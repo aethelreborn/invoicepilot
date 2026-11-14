@@ -130,7 +130,15 @@ export async function POST(request: NextRequest) {
     .select()
     .single();
 
-  if (invErr) return NextResponse.json({ error: invErr.message }, { status: 500 });
+  if (invErr) {
+    if (invErr.message?.includes("free_plan_invoice_limit")) {
+      return NextResponse.json(
+        { error: "Free includes 3 invoices. Upgrade on the Billing page to add unlimited invoices.", code: "plan_limit" },
+        { status: 402 }
+      );
+    }
+    return NextResponse.json({ error: invErr.message }, { status: 500 });
+  }
 
   const items = d.line_items.map((li, i) => ({
     invoice_id: invoice.id,

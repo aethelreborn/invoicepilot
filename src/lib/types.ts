@@ -1,3 +1,5 @@
+import type { PlanId } from "./plans";
+
 export type InvoiceStatus = "draft" | "sent" | "viewed" | "claimed" | "paid" | "overdue" | "void";
 
 export type ReminderTone = "friendly" | "firm" | "final";
@@ -10,7 +12,10 @@ export interface Profile {
   logo_url: string | null;
   currency: string;
   reminder_tone: ReminderTone;
-  plan?: "free" | "starter";
+  plan?: PlanId;
+  role?: "user" | "admin";
+  plan_renews_at?: string | null;
+  onboarding_completed_at?: string | null;
   created_at: string;
   updated_at: string;
 }

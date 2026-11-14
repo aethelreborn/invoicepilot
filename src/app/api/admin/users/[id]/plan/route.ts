@@ -3,11 +3,12 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-guard";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
+import { isPaidPlan, renewalDaysFor } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  plan: z.enum(["free", "starter"]),
+  plan: z.enum(["free", "starter", "growth"]),
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Plan must be free or starter." }, { status: 400 });
+    return NextResponse.json({ error: "Plan must be free, starter or growth." }, { status: 400 });
   }
 
   const admin = createAdminSupabase();
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .from("profiles")
     .update({
       plan: parsed.data.plan,
-      plan_renews_at: parsed.data.plan === "starter" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+      plan_renews_at: isPaidPlan(parsed.data.plan) ? new Date(Date.now() + renewalDaysFor("monthly") * 24 * 60 * 60 * 1000).toISOString() : null,
     })
     .eq("id", id);
 

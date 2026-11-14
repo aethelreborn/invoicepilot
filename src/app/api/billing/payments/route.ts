@@ -1,24 +1,30 @@
-import { NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { requireUser } from "@/lib/api";
 import { rateLimit } from "@/lib/rate-limit";
+import { checkoutAmountCents, renewalDaysFor, isPlanId, type BillingInterval } from "@/lib/plans";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const STARTER_AMOUNT_CENTS = 79900;
+const schema = z.object({
+  plan: z.enum(["starter", "growth"]).default("starter"),
+  interval: z.enum(["monthly", "annual"]).default("monthly"),
+});
 
 export async function GET() {
-  const { user, response } = await requireUser();
+  const { user, supabase, response } = await requireUser();
   if (response) return response;
 
-  const supabase = await createServerSupabase();
-  const { data } = await supabase.from("platform_payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
+  const [{ data: payments }, { data: profile }] = await Promise.all([
+    supabase.from("platform_payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }),
+    supabase.from("profiles").select("plan, plan_renews_at").eq("id", user!.id).maybeSingle(),
+  ]);
 
-  return NextResponse.json({ payments: data || [] });
+  return NextResponse.json({ payments: payments || [], profile: profile || null });
 }
 
-export async function POST() {
-  const { user, response } = await requireUser();
+export async function POST(request: NextRequest) {
+  const { user, supabase, response } = await requireUser();
   if (response) return response;
 
   const allowed = await rateLimit(`billing:create:${user!.id}`, user!.id, 5, 3600);
@@ -26,12 +32,20 @@ export async function POST() {
     return NextResponse.json({ error: "Too many upgrade attempts. Try again later." }, { status: 429 });
   }
 
-  const supabase = await createServerSupabase();
+  const body = await request.json().catch(() => ({}));
+  const parsed = schema.safeParse(body ?? {});
+  if (!parsed.success || !isPlanId(parsed.data.plan)) {
+    return NextResponse.json({ error: "Unknown plan." }, { status: 400 });
+  }
+  const plan = parsed.data.plan;
+  const interval: BillingInterval = parsed.data.interval;
+
   const reference = `IP-${crypto.randomUUID()}`;
   const { error } = await supabase.from("platform_payments").insert({
     user_id: user!.id,
-    plan: "starter",
-    amount_cents: STARTER_AMOUNT_CENTS,
+    plan,
+    interval,
+    amount_cents: checkoutAmountCents(plan, interval),
     currency: "INR",
     reference,
     status: "pending",
@@ -39,7 +53,7 @@ export async function POST() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const { data: payment } = await supabase.from("platform_payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(1);
+  const { data: list } = await supabase.from("platform_payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(1);
 
-  return NextResponse.json({ payment: payment?.[0] || null });
+  return NextResponse.json({ payment: list?.[0] || null, renewalDays: renewalDaysFor(interval) });
 }

@@ -5,6 +5,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { loadPaymentSettings } from "@/lib/payments/settings";
 import { createCheckout, buildUpiUri } from "@/lib/payments";
 import { ProviderError } from "@/lib/payments/types";
+import { planAllows } from "@/lib/plans";
 import { appOrigin } from "@/lib/app-url";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import type { Invoice } from "@/lib/types";
@@ -85,12 +86,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("business_name")
+    .select("business_name, plan")
     .eq("id", invoice.user_id)
     .maybeSingle();
 
-  const paymentId = crypto.randomUUID();
   const needsPaymentRow = ["razorpay", "stripe", "youpi"].includes(settings.provider);
+  if (needsPaymentRow && !planAllows(profile?.plan, "hostedCheckout")) {
+    return NextResponse.json({
+      checkout: {
+        kind: "unavailable",
+        reason:
+          "This payout method needs Starter or Growth. The sender can upgrade on the Billing page, or ask the client to pay by UPI.",
+      },
+    });
+  }
+
+  const paymentId = crypto.randomUUID();
 
   if (needsPaymentRow) {
     const { error } = await admin.from("payments").insert({

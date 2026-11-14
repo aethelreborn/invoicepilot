@@ -8,6 +8,7 @@ import { loadTemplates } from "@/lib/email/templates-store";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
 import type { ReminderTone } from "@/lib/types";
+import { planAllows } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +66,20 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ templates });
   }
 
-  const { user, response } = await requireUser();
+  const { user, supabase, response } = await requireUser();
   if (response) return response;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("id", user!.id)
+    .maybeSingle();
+  if (!planAllows(profile?.plan, "customTemplates")) {
+    return NextResponse.json(
+      { error: "Custom reminder templates need Starter or Growth.", code: "plan_limit" },
+      { status: 402 }
+    );
+  }
 
   const allowed = await rateLimit("settings:templates", user!.id, 30, 3600);
   if (!allowed) {

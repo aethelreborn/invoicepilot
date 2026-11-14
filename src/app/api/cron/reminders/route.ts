@@ -4,6 +4,7 @@ import { sendEmail, emailConfigured } from "@/lib/email/resend";
 import { reminderSubject, reminderBody } from "@/lib/email/templates";
 import { DEFAULT_REMINDER_SEQUENCE } from "@/lib/types";
 import { appOrigin } from "@/lib/app-url";
+import { planAllows } from "@/lib/plans";
 import type { Invoice, Profile } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
 
   let processed = 0;
   let sent = 0;
+  let demoted = 0;
   const origin = appOrigin(request);
 
   for (const row of invoices || []) {
@@ -50,6 +52,8 @@ export async function GET(request: NextRequest) {
       .select("*")
       .eq("id", invoice.user_id)
       .single();
+
+    if (!planAllows((profile as Profile | null)?.plan, "automatedReminders")) continue;
 
     const payUrl = `${origin}/pay/${invoice.pay_token}`;
     const subject = reminderSubject(invoice, step.tone);
@@ -85,5 +89,17 @@ export async function GET(request: NextRequest) {
     if (delivered) sent++;
   }
 
-  return NextResponse.json({ processed, sent, email_configured: emailConfigured() });
+  // Manual billing has no card on file to fail, so the lapse has to be enforced here.
+  if (serviceKey) {
+    const { data: lapsed } = await client
+      .from("profiles")
+      .update({ plan: "free", plan_renews_at: null })
+      .in("plan", ["starter", "growth"])
+      .lt("plan_renews_at", new Date().toISOString())
+      .neq("role", "admin")
+      .select("id");
+    demoted = lapsed?.length ?? 0;
+  }
+
+  return NextResponse.json({ processed, sent, demoted, email_configured: emailConfigured() });
 }
