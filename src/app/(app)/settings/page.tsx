@@ -103,6 +103,23 @@ export default function SettingsPage() {
             youpi_webhook_secret: "",
             custom_webhook_secret: "",
           });
+        } else {
+          setDraft({
+            provider: "upi",
+            upi_vpa: "",
+            upi_name: "",
+            bank_details: "",
+            razorpay_key_id: "",
+            razorpay_key_secret: "",
+            razorpay_webhook_secret: "",
+            stripe_publishable_key: "",
+            stripe_secret_key: "",
+            stripe_webhook_secret: "",
+            youpi_base_url: "",
+            youpi_merchant_id: "",
+            youpi_webhook_secret: "",
+            custom_webhook_secret: "",
+          });
         }
       });
     fetch("/api/settings/email")

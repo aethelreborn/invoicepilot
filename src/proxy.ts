@@ -80,8 +80,10 @@ export async function proxy(request: NextRequest) {
 
   let user = null;
   try {
-    const res = await supabase.auth.getUser();
-    user = res.data?.user ?? null;
+    const getUserPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    const result = await Promise.race([getUserPromise, timeoutPromise]);
+    user = (result as { data?: { user?: unknown } })?.data?.user ?? null;
   } catch {
     // Network/env issue: allow request through; pages handle auth themselves.
     return supabaseResponse;
