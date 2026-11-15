@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Wordmark, { Mark } from "@/components/marketing/wordmark";
+import AuthCta from "@/components/marketing/auth-cta";
+import CookieConsent from "@/components/marketing/cookie-consent";
 
 const navLink =
   "text-[13px] text-muted transition-colors hover:text-ink focus-visible:text-ink";
@@ -31,15 +33,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className={navLink}>
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex h-9 items-center bg-ink px-4 text-[13px] font-medium text-paper transition-colors hover:bg-ink-soft"
-            >
-              Start free
-            </Link>
+            <AuthCta />
           </div>
         </div>
       </header>
@@ -94,6 +88,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }
