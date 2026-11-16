@@ -30,6 +30,7 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
   let invoice: (Invoice & { invoice_line_items: PublicLineItem[] }) | null = null;
   let fromName = "Your service provider";
   let payload: PublicInvoicePayload | null = null;
+  let demoPayment: PublicPaymentInfo | null = null;
   if (isDemoMode()) {
     const found = demoStore.invoices.find((i) => i.pay_token === token) || null;
     if (found) {
@@ -39,6 +40,14 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
       }
       invoice = found;
       fromName = demoStore.profile.business_name || fromName;
+      const ps = demoStore.paymentSettings;
+      demoPayment = {
+        provider: ps.provider,
+        upi_vpa: ps.upi_vpa,
+        upi_name: ps.upi_name,
+        bank_details: ps.bank_details,
+        has_checkout: ["razorpay", "stripe", "youpi"].includes(ps.provider),
+      };
     }
   } else {
     const supabase = await createServerSupabase();
@@ -69,7 +78,7 @@ export default async function PayPage({ params }: { params: Promise<{ token: str
   }
 
   const items = inv.invoice_line_items || [];
-  const payment: PublicPaymentInfo | null = payload?.payment || null;
+  const payment: PublicPaymentInfo | null = payload?.payment || demoPayment;
   const maskEmail = (value: string | null) => {
     if (!value) return null;
     const [local, domain] = value.split("@");

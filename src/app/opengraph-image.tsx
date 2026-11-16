@@ -102,7 +102,7 @@ export default function OpengraphImage() {
               <span style={{ fontSize: 12, letterSpacing: 3, textTransform: "uppercase", color: "#5f5a4e" }}>
                 Due
               </span>
-              <span style={{ fontSize: 22, fontWeight: 600 }}>₹12,000.00</span>
+              <span style={{ fontSize: 22, fontWeight: 600 }}>Rs 12,000.00</span>
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function OpengraphImage() {
           }}
         >
           <span>Free plan — 3 invoices, no card</span>
-          <span>invoicepilot.app</span>
+          <span>invoicepilot.aethelreborn.workers.dev</span>
         </div>
       </div>
     ),

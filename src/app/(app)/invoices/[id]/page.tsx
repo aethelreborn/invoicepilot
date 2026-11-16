@@ -44,7 +44,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const h = await headers();
   const host = h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "");
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "") || (host ? `${proto}://${host}` : "");
 
   return (
     <div className="mx-auto w-full max-w-[900px] px-6 py-10 md:px-10 md:py-12">
